@@ -5,12 +5,12 @@ Checking is linux wall clock in sync depends on installation and hardware config
 Initial guess is that Adjtimex should work.
 
 Please add functions for checking synchronization status in some other methods
-
 */
 package timegopher
 
 import (
 	"syscall"
+	"time"
 )
 
 // https://man7.org/linux/man-pages/man2/adjtimex.2.html
@@ -61,7 +61,7 @@ const (
 	STA_CLK       = 0x8000 /* clock source (0 = A, 1 = B) (ro) */
 )
 
-//RtcIsSynced_adjtimex uses syscall.Adjtimex for checking is wall clock synchronized
+// RtcIsSynced_adjtimex uses syscall.Adjtimex for checking is wall clock synchronized
 func RtcIsSynced_adjtimex() (bool, error) {
 	tx := syscall.Timex{}
 	rtcState, err := syscall.Adjtimex(&tx)
@@ -70,4 +70,9 @@ func RtcIsSynced_adjtimex() (bool, error) {
 	}
 
 	return (rtcState <= 0) && (rtcState != TIME_ERROR), nil
+}
+
+func SetSysClock(now time.Time) error {
+	tv := syscall.NsecToTimeval(now.UnixNano())
+	return syscall.Settimeofday(&tv)
 }
